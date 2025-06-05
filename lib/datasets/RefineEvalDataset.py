@@ -27,23 +27,22 @@ class RefineEvalDataset(Dataset):
     def __len__(self):
         return len(self.inputs)
 
-    def __getitem__(self, idx):
-        
+    def __getitem__(self, idx):        
         data = self.inputs[idx]
 
         if 'camera' in data.keys():
             render_param = np.load(data['camera'], allow_pickle=True).item()
         else:
-            render_param = {'center': np.asarray([0, 0, 0]), 'scale': 100}
+            render_param = {'center': np.asarray([0, 0, 0]), 'scale': 100, 'R': np.eye(3)}
 
         smplx_mesh = o3d.io.read_triangle_mesh(data['subsmplx'])
-        smplx_mesh.vertices = o3d.utility.Vector3dVector(back_to_econ_axis(smplx_mesh.vertices, render_param, 0))
+        smplx_mesh.vertices = o3d.utility.Vector3dVector(back_to_econ_axis(smplx_mesh.vertices, render_param))
         smplx_mesh.compute_vertex_normals()
         smplx_normals = np.asarray(smplx_mesh.vertex_normals)
         smplx_vertices = np.asarray(smplx_mesh.vertices)
 
         inpaint_mesh = o3d.io.read_triangle_mesh(data['completed_mesh'])
-        inpaint_mesh.vertices = o3d.utility.Vector3dVector(back_to_econ_axis(inpaint_mesh.vertices, render_param, 0))
+        inpaint_mesh.vertices = o3d.utility.Vector3dVector(back_to_econ_axis(inpaint_mesh.vertices, render_param))
         input_vertices = np.asarray(inpaint_mesh.vertices)
         if self.cfg.smooth_iter > 0:
             inpaint_mesh = inpaint_mesh.filter_smooth_laplacian(self.cfg.smooth_iter, self.cfg.smooth_lambda)
@@ -93,4 +92,5 @@ class RefineEvalDataset(Dataset):
                 "front_normal": front_normal.float(),
                 "back_normal": back_normal.float(),
                 "center": render_param['center'],
-                "scale": render_param['scale']}
+                "scale": render_param['scale'],
+                "R": render_param['R']}

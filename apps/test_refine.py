@@ -14,6 +14,7 @@ from lib.datasets.RefineEvalDataset import RefineEvalDataset
 from lib.utils.uv_sample.divided_uv_generator import Index_UV_Generator
 from lib.utils.mesh_util import load_obj, save_obj
 from lib.tools.feature_projection import orthogonal, index
+from lib.utils.smplx_util import back_from_econ
 
 
 def evaluate_refine(sampler, model, dataset, cfg, cfg_resources, device, save_root=None):
@@ -84,7 +85,8 @@ def evaluate_refine(sampler, model, dataset, cfg, cfg_resources, device, save_ro
 
             if save_root is not None:
                 # econ_calib
-                trans_pred = pred_full_verts[0].clone().detach().cpu().numpy() * 100 / batch['scale'][0] + batch['center'][0]
+                # trans_pred = pred_full_verts[0].clone().detach().cpu().numpy() * 100 / batch['scale'][0] + batch['center'][0]
+                trans_pred = back_from_econ(pred_full_verts[0].clone().detach().cpu().numpy(), batch['center'][0], batch['scale'][0], batch['R'][0])
                 if i > 0:
                     result = o3d.geometry.TriangleMesh()
                     result.vertices = o3d.utility.Vector3dVector(trans_pred)
