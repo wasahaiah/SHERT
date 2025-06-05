@@ -33,10 +33,18 @@ def inverse_rot(vertex, theta):
         np.float32)
     return np.matmul(rot_mat, vertex.transpose(1, 0)).transpose(1, 0)
 
+def rot(vertex, rot_mat):
+    return np.matmul(rot_mat, vertex.transpose(1, 0)).transpose(1, 0)
 
-def back_to_econ_axis(vertices, param, view_id):
+def back_to_econ_axis(vertices, param):
     vertices = np.asarray(vertices)
     vertices = vertices - param['center']
     vertices = vertices * param['scale'] / 100
-    return inverse_rot(vertices, view_id)
+    return rot(vertices, param['R'])
+
+def back_from_econ(vertices, center, scale, R):
+    rot_verts = rot(vertices, np.linalg.inv(R))
+    vertices = rot_verts * 100 / scale
+    vertices = vertices + center
+    return vertices
 
